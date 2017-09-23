@@ -65,13 +65,13 @@ def create_data():
     return data
 
 def sample_data(data):
-    return random.choice(data)
+    return np.array([random.choice(data)])
 
-def create__fake_data():
+def create_fake_data():
     epitope = []
-    for index in xrange(len(20)):
+    for index in xrange(20):
         epitope.append(random.random())
-    return np.array(epitope)
+    return np.array([epitope])
 
 data = create_data()
 print sample_data(data)
