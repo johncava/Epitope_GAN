@@ -2,6 +2,28 @@ import pickle
 import numpy as np
 import random
 
+# Float representations for Amino Acids
+table = {'A':1.0,
+         'R':2.0,
+         'N':3.0,
+         'D':4.0,
+         'C':5.0,
+         'E':6.0,
+         'Q':7.0,
+         'G':8.0,
+         'H':9.0,
+         'I':10.0,
+         'L':11.0,
+         'K':12.0,
+         'M':13.0,
+         'F':14.0,
+         'P':15.0,
+         'S':16.0,
+         'T':17.0,
+         'W':18.0,
+         'Y':19.0,
+         'V':20.0}
+
 def load_obj(name):
     with open( name + '.pkl', 'rb') as f:
         return pickle.load(f)
@@ -29,6 +51,31 @@ def embedding(model, seq):
     third = split(2, model, seq, third)
     return first, second, third
 
+def create_data():
+    data = []
+    with open('pos.data') as file:
+        for line in file:
+            line = line.rstrip('\n')
+            line = line.split()
+            epitope = []
+            for aa in line[0]:
+                epitope.append(table[aa])
+            #print epitope
+            data.append(epitope)
+    return data
+
+def sample_data(data):
+    return random.choice(data)
+
+def create__fake_data():
+    epitope = []
+    for index in xrange(len(20)):
+        epitope.append(random.random())
+    return np.array(epitope)
+
+data = create_data()
+print sample_data(data)
+'''
 model = initialize()
 num = 0
 batch = []
@@ -44,4 +91,6 @@ with open('pos.data') as file:
         batch.append(mean)
         if num > 10:
             break
+
 print random.sample(batch, batch_size)
+'''
