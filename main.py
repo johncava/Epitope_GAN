@@ -5,6 +5,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 from process import *
+import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 
 prot_set = ['A','R','N','D','C','E','Q','G','H','I','L','K','M','F',
             'P','S','T','W','Y','V']
@@ -72,6 +74,8 @@ loss_fn = torch.nn.BCELoss()
 
 data = create_data()
 
+iteration_list = []
+error_list = []
 
 for iteration in xrange(iterations):
     for d_steps in xrange(discriminator_steps):
@@ -114,7 +118,12 @@ for iteration in xrange(iterations):
         generator_data = Generator(Variable(fake_data)).detach()
         discriminator_decision = Discriminator(generator_data)
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.ones(1)))
-        print discriminator_error[0]
+        error_list.append(discriminator_error.data[0])
+	iteration_list.append(iteration)
 	discriminator_error.backward()
         discriminator_optimizer.step()
 
+f = plt.figure()
+plt.plot(iteration_list, error_list)
+plt.show()
+f.savefig("error.pdf")
