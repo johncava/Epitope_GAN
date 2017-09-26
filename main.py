@@ -44,8 +44,8 @@ Generator = torch.nn.Sequential(
 	torch.nn.ReLU(),
 	torch.nn.Linear(50,50),
 	torch.nn.ReLU(),
-	torch.nn.Linear(50,20),
-	torch.nn.Sigmoid()
+	torch.nn.Linear(50,20)
+	#torch.nn.Sigmoid()
 )
 Discriminator = torch.nn.Sequential(
 	torch.nn.Linear(20, 50),
@@ -56,7 +56,7 @@ Discriminator = torch.nn.Sequential(
 	torch.nn.Sigmoid()
 )
 
-iterations = 10
+iterations = 100
 debug = 100
 discriminator_steps = 10
 generator_steps = 10
