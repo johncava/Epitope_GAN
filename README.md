@@ -1,6 +1,6 @@
 # Epitope_GAN
 
-Generate B Cell Epitopes with a Generative Neural Network
+Generate Linear B Cell Epitopes with a Generative Neural Network
 
 # References
 
