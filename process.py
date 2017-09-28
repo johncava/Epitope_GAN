@@ -51,7 +51,7 @@ def embedding(model, seq):
     third = split(2, model, seq, third)
     return first, second, third
 
-def create_data():
+def create_pos_data():
     data = []
     with open('pos.data') as file:
         for line in file:
@@ -59,7 +59,20 @@ def create_data():
             line = line.split()
             epitope = []
             for aa in line[0]:
-                epitope.append(table[aa])
+                epitope.append(table[aa]/20.0)
+            #print epitope
+            data.append(epitope)
+    return data
+
+def create_neg_data():
+    data = []
+    with open('neg.data') as file:
+        for line in file:
+            line = line.rstrip('\n')
+            line = line.split()
+            epitope = []
+            for aa in line[0]:
+                epitope.append(table[aa]/20.0)
             #print epitope
             data.append(epitope)
     return data
@@ -67,13 +80,13 @@ def create_data():
 def sample_data(data):
     return np.array([random.choice(data)])
 
-def create_fake_data():
+def create_fake_data(num):
     epitope = []
-    for index in xrange(20):
+    for index in xrange(num):
         epitope.append(random.random())
     return np.array([epitope])
 
-data = create_data()
+data = create_pos_data()
 print sample_data(data)
 '''
 model = initialize()

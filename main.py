@@ -46,13 +46,17 @@ Generator = torch.nn.Sequential(
 	torch.nn.ReLU(),
 	torch.nn.Linear(50,50),
 	torch.nn.ReLU(),
-	torch.nn.Linear(50,20)
-	#torch.nn.Sigmoid()
+	torch.nn.Linear(50,20),
+	torch.nn.Sigmoid()
 )
 Discriminator = torch.nn.Sequential(
 	torch.nn.Linear(20, 50),
 	torch.nn.ReLU(),
-	torch.nn.Linear(50, 50),
+	torch.nn.Linear(50, 150),
+	torch.nn.ReLU(),
+	torch.nn.Linear(150,50),
+	torch.nn.ReLU(),
+	torch.nn.Linear(50,50),
 	torch.nn.ReLU(),
 	torch.nn.Linear(50,1),
 	torch.nn.Sigmoid()
@@ -60,8 +64,8 @@ Discriminator = torch.nn.Sequential(
 
 iterations = 100
 debug = 100
-discriminator_steps = 10
-generator_steps = 10
+discriminator_steps = 100
+generator_steps = 100
 optim_betas = (0.9, 0.999)
 d_learning_rate = 2e-4
 g_learning_rate = 2e-4
@@ -72,7 +76,8 @@ generator_optimizer = optim.Adam(Generator.parameters(), lr=g_learning_rate, bet
 
 loss_fn = torch.nn.BCELoss()
 
-data = create_data()
+pos_data = create_pos_data()
+neg_data = create_neg_data()
 
 iteration_list = []
 error_list = []
@@ -82,18 +87,29 @@ for iteration in xrange(iterations):
         Discriminator.zero_grad()
 
         # Sample Real Data
-        real_data = sample_data(data)
+        real_data = sample_data(pos_data)
 	real_data = torch.from_numpy(real_data)
 	real_data = real_data.float()
         
-	# Train Discriminator on Real Data
+	# Train Discriminator on Real Positive Data
         discriminator_decision = Discriminator(Variable(real_data))
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.ones(1)))
 	#print discriminator_error[0]
 	discriminator_error.backward()
 
+        # Sample Real Data
+        real_data = sample_data(neg_data)
+        real_data = torch.from_numpy(real_data)
+        real_data = real_data.float()
+
+	# Train Discriminator on Real Negative Data
+        discriminator_decision = Discriminator(Variable(real_data))
+        discriminator_error = loss_fn(discriminator_decision, Variable(torch.zeros(1)))
+        #print discriminator_error[0]
+        discriminator_error.backward()
+
         # Create Fake Data
-        fake_data = create_fake_data()
+        fake_data = create_fake_data(20)
         fake_data = torch.from_numpy(fake_data)
         fake_data = fake_data.float()
 
@@ -110,7 +126,7 @@ for iteration in xrange(iterations):
         Generator.zero_grad()
 
         # Create Fake Data
-        fake_data = create_fake_data()
+        fake_data = create_fake_data(20)
         fake_data = torch.from_numpy(fake_data)
         fake_data = fake_data.float()
 
@@ -118,12 +134,24 @@ for iteration in xrange(iterations):
         generator_data = Generator(Variable(fake_data)).detach()
         discriminator_decision = Discriminator(generator_data)
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.ones(1)))
-        error_list.append(discriminator_error.data[0])
-	iteration_list.append(iteration)
+        #error_list.append(discriminator_error.data[0])
+	#iteration_list.append(iteration)
 	discriminator_error.backward()
         discriminator_optimizer.step()
 
+    error_list.append(discriminator_error.data[0])
+    iteration_list.append(iteration)
+
+for iteration in xrange(10):
+        fake_data = create_fake_data(20)
+        fake_data = torch.from_numpy(fake_data)
+        fake_data = fake_data.float()
+        synthetic_data = Generator(Variable(fake_data))
+        #synthetic_data = synthetic_data.data.numpy()
+        print synthetic_data
+
 f = plt.figure()
 plt.plot(iteration_list, error_list)
+plt.title("GAN Discriminator Error from Generator")
 plt.show()
 f.savefig("error.pdf")
