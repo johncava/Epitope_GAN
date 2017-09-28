@@ -41,12 +41,13 @@ class Discrim(nn.Module):
                 self.d3 = torch.nn.Conv1d(30,20,3)
                 self.d4 = torch.nn.Conv1d(20,10,3)
                 self.d5 = torch.nn.Conv1d(10,1,3)
+		self.drop = torch.nn.Dropout(p=0.5)
                 self.linear = torch.nn.Linear(10,1)
-		self.relu = torch.nn.ReLU()
+		self.relu = torch.nn.LeakyReLU(0.1)
                 self.sig = torch.nn.Sigmoid()
         
 	def forward(self, input):
-                conv = self.relu(self.d5(self.relu(self.d4(self.relu(self.d3(self.relu(self.d2(self.relu(self.d1(input))))))))))
+                conv = self.relu(self.drop(self.d5(self.relu(self.drop(self.d4(self.relu(self.drop(self.d3(self.relu(self.drop(self.d2(self.relu(self.drop(self.d1(input)))))))))))))))
                 output_layer = self.sig(self.linear(conv.view(1,10)))
                 return output_layer
 '''
@@ -68,13 +69,17 @@ sig = torch.nn.Sigmoid()
 '''
 Generator = torch.nn.Sequential(
     torch.nn.ConvTranspose1d(1,10,3),
-    torch.nn.ReLU(),
+    torch.nn.LeakyReLU(0.1),
+    torch.nn.Dropout(p=0.4),
     torch.nn.ConvTranspose1d(10,20,3),
-    torch.nn.ReLU(),    
+    torch.nn.LeakyReLU(0.1),
+    torch.nn.Dropout(p=0.4),    
     torch.nn.ConvTranspose1d(20,40,3),
-    torch.nn.ReLU(),
+    torch.nn.LeakyReLU(0.1),
+    torch.nn.Dropout(p=0.2),
     torch.nn.ConvTranspose1d(40,40,3),
-    torch.nn.ReLU(),    
+    torch.nn.LeakyReLU(0.1),
+    torch.nn.Dropout(p=0.1),    
     torch.nn.ConvTranspose1d(40,1,3),
     torch.nn.Sigmoid()
 )
@@ -99,8 +104,8 @@ debug = 100
 discriminator_steps = 50
 generator_steps = 50
 optim_betas = (0.9, 0.999)
-d_learning_rate = 2e-4
-g_learning_rate = 2e-4
+d_learning_rate = 5e-3
+g_learning_rate = 5e-3
 discriminator_optimizer = optim.Adam(Discriminator.parameters(), lr=g_learning_rate, betas=optim_betas)
 generator_optimizer = optim.Adam(Generator.parameters(), lr=g_learning_rate, betas=optim_betas)
 
@@ -144,7 +149,7 @@ for iteration in xrange(iterations):
         fake_data = fake_data.float()
 
         # Train Discriminator on Fake Data
-        generator_data = Generator(Variable(fake_data).view(1,1,10)).detach()
+        generator_data = Generator(Variable(torch.normal(means=torch.zeros(10))).view(1,1,10)).detach()
 	discriminator_decision = Discriminator(generator_data)
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.zeros(1)))
         #print discriminator_error[0]
@@ -161,7 +166,7 @@ for iteration in xrange(iterations):
         fake_data = fake_data.float()
 
         #Train Generator from Discriminator
-        generator_data = Generator(Variable(fake_data).view(1,1,10)).detach()
+        generator_data = Generator(Variable(torch.normal(means=torch.zeros(10))).view(1,1,10)).detach()
         discriminator_decision = Discriminator(generator_data)
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.ones(1)))
 	discriminator_error.backward()

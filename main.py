@@ -43,22 +43,30 @@ class Discriminator(nn.Module):
 '''
 Generator = torch.nn.Sequential(
 	torch.nn.Linear(20,50),
-	torch.nn.ReLU(),
+	torch.nn.LeakyReLU(0.2),
+	torch.nn.Dropout(p=0.2),
 	torch.nn.Linear(50,50),
-	torch.nn.ReLU(),
+	torch.nn.LeakyReLU(0.2),
+	torch.nn.Dropout(p=0.2),
 	torch.nn.Linear(50,20),
+	torch.nn.Dropout(p=0.2),
 	torch.nn.Sigmoid()
 )
 Discriminator = torch.nn.Sequential(
 	torch.nn.Linear(20, 50),
-	torch.nn.ReLU(),
+	torch.nn.LeakyReLU(0.2),
+	torch.nn.Dropout(p=0.2),
 	torch.nn.Linear(50, 150),
-	torch.nn.ReLU(),
+	torch.nn.LeakyReLU(0.2),
+	torch.nn.Dropout(p=0.2),
 	torch.nn.Linear(150,50),
-	torch.nn.ReLU(),
+	torch.nn.LeakyReLU(0.2),
+	torch.nn.Dropout(p=0.1),
 	torch.nn.Linear(50,50),
-	torch.nn.ReLU(),
+	torch.nn.LeakyReLU(0.1),
+	torch.nn.Dropout(p=0.1),
 	torch.nn.Linear(50,1),
+	torch.nn.Dropout(p=0.1),
 	torch.nn.Sigmoid()
 )
 
@@ -97,24 +105,13 @@ for iteration in xrange(iterations):
 	#print discriminator_error[0]
 	discriminator_error.backward()
 
-        # Sample Real Data
-        real_data = sample_data(neg_data)
-        real_data = torch.from_numpy(real_data)
-        real_data = real_data.float()
-
-	# Train Discriminator on Real Negative Data
-        discriminator_decision = Discriminator(Variable(real_data))
-        discriminator_error = loss_fn(discriminator_decision, Variable(torch.zeros(1)))
-        #print discriminator_error[0]
-        discriminator_error.backward()
-
         # Create Fake Data
         fake_data = create_fake_data(20)
         fake_data = torch.from_numpy(fake_data)
         fake_data = fake_data.float()
 
         # Train Discriminator on Fake Data
-        generator_data = Generator(Variable(fake_data)).detach()
+        generator_data = Generator(Variable(torch.normal(means=torch.zeros(20))).view(1,20)).detach()
         discriminator_decision = Discriminator(generator_data)
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.zeros(1)))
         #print discriminator_error[0]
@@ -131,7 +128,7 @@ for iteration in xrange(iterations):
         fake_data = fake_data.float()
 
         #Train Generator from Discriminator
-        generator_data = Generator(Variable(fake_data)).detach()
+        generator_data = Generator(Variable(torch.normal(means=torch.zeros(20))).view(1,20)).detach()
         discriminator_decision = Discriminator(generator_data)
         discriminator_error = loss_fn(discriminator_decision, Variable(torch.ones(1)))
         #error_list.append(discriminator_error.data[0])
